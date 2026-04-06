@@ -1,0 +1,440 @@
+# Лабораторная работа №1: Первичное исследование и оценка качества данных
+
+ 1.Постановка задачи
+ Описание датасета
+Датасет представляет собой набор данных о продажах интернет-магазина за период с января 2024 года по май 2025 года. Данные содержат информацию о 500 транзакциях и включают следующие характеристики:
+
+Идентификатор транзакции – уникальный номер покупки
+
+Дата покупки – время совершения заказа
+
+Наименование товара – категория приобретенного товара (ноутбук, телефон, наушники, зарядка, чехол)
+
+Город покупателя – географическое расположение клиента
+
+Количество товара – число единиц в заказе
+
+Цена за единицу – стоимость одного товара в рублях
+
+Скидка – процент предоставленной скидки
+
+Возраст покупателя – возраст клиента
+
+Условным заказчик
+
+Условным заказчиком выступает отдел маркетинга и аналитики интернет-магазина. Основные стейкхолдеры:
+
+Маркетинговый отдел – для планирования рекламных кампаний и сегментации клиентов
+
+Отдел продаж – для оптимизации ассортимента и ценовой политики
+
+Руководство компании – для принятия стратегических решений на основе данных
+
+
+Способ оплаты – метод расчета (онлайн, карта, наличные)
+
+Возможные задачи ИАД
+
+Задача 1. Сегментация клиентов
+Выделение групп покупателей на основе их возраста, города, суммы покупок и частоты заказов. Это позволит маркетинговому отделу создавать персонализированные предложения для каждого сегмента.
+
+Задача 2. Поиск ассоциативных правил
+Выявление устойчивых пар и групп товаров, которые клиенты покупают вместе. Результат поможет оптимизировать размещение товаров и создавать рекомендательные системы.
+
+3адача 3. Прогнозирование спроса
+Предсказание объемов продаж по месяцам и категориям товаров. Это необходимо для планирования закупок и управления складскими запасами.
+
+ Импорт библиотек (Code)
+python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.style.use('default')
+plt.rcParams['figure.figsize'] = (12, 6)
+plt.rcParams['font.size'] = 12
+
+
+ Постановка задачи
+
+## 1. Постановка задачи (Business Understanding)
+
+### 1.1 Описание данных
+Датасет содержит информацию о транзакциях интернет-магазина за период с января 2024 по май 2025 года. Включает данные о покупателях, продуктах, финансовых показателях.
+
+### 1.2 Заказчик анализа
+Отдел маркетинга и аналитики интернет-магазина.
+
+### 1.3 Задачи интеллектуального анализа данных
+1. Сегментация клиентов
+2. Анализ продаж
+3. Прогнозирование динамики продаж
+
+ Загрузка и просмотр данных
+2. Паспорт датасета
+Загрузка данных
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings('ignore')
+
+# Настройка графиков
+plt.style.use('default')
+sns.set_palette("husl")
+plt.rcParams['figure.figsize'] = (12, 6)
+
+print("=" * 60)
+print("2. ПАСПОРТ ДАТАСЕТА")
+print("=" * 60)
+
+# ЗАГРУЗКА ДАННЫХ
+
+print("\n ЗАГРУЗКА ДАННЫХ")
+print("-" * 40)
+
+# Загрузка данных (используем правильное имя файла)
+df = pd.read_excel('ПРОДАЖА _data (1).xlsx')
+
+print(f' Размер датасета: {df.shape[0]} строк, {df.shape[1]} столбцов')
+
+print("\n ПЕРВЫЕ 5 СТРОК:")
+display(df.head())
+
+
+СТРУКТУРА ДАННЫХ
+
+print("\n СТРУКТУРА ДАННЫХ")
+print("-" * 40)
+
+# Информация о столбцах и типах
+print("Информация о столбцах:")
+df.info()
+
+print("\n СТАТИСТИКА ПО ЧИСЛОВЫМ ПРИЗНАКАМ:")
+display(df.describe())
+
+# Паспорт датасета (таблица всех признаков)
+print("\n ПАСПОРТ ДАТАСЕТА (все признаки):")
+passport_df = pd.DataFrame({
+    'Признак': df.columns,
+    'Тип данных': df.dtypes.values,
+    'Уникальных значений': [df[col].nunique() for col in df.columns],
+    'Пропуски': df.isnull().sum().values,
+    'Доля пропусков %': (df.isnull().sum() / len(df) * 100).round(2).values,
+    'Пример значения': [str(df[col].iloc[0]) for col in df.columns]
+})
+display(passport_df)
+
+ 3. АУДИТ КАЧЕСТВА ДАННЫХ
+
+print("\n" + "=" * 60)
+print("3. АУДИТ КАЧЕСТВА ДАННЫХ")
+print("=" * 60)
+
+ 3.1. ПРОПУСКИ
+
+print("\n3.1. ПРОВЕРКА ПРОПУСКОВ")
+print("-" * 40)
+
+missing = pd.DataFrame({
+    'Пропуски': df.isnull().sum(),
+    'Доля (%)': (df.isnull().sum() / len(df) * 100).round(2)
+}).sort_values('Пропуски', ascending=False)
+
+missing = missing[missing['Пропуски'] > 0]
+
+if len(missing) > 0:
+    print(" НАЙДЕНЫ ПРОПУСКИ:")
+    display(missing)
+    
+    # Визуализация пропусков
+    plt.figure(figsize=(8, 4))
+    plt.barh(missing.index, missing['Пропуски'], color='salmon')
+    plt.xlabel('Количество пропусков')
+    plt.title('Пропуски в данных')
+    plt.tight_layout()
+    plt.show()
+else:
+    print(" Пропусков не найдено!")
+
+ 3.2. ДУБЛИКАТЫ
+
+print("\n3.2. ПРОВЕРКА ДУБЛИКАТОВ")
+print("-" * 40)
+
+full_duplicates = df.duplicated().sum()
+print(f'Полных дубликатов строк: {full_duplicates}')
+
+if 'id' in df.columns:
+    id_duplicates = df['id'].duplicated().sum()
+    print(f'Дубликатов по id: {id_duplicates}')
+    
+    if id_duplicates > 0:
+        dup_ids = df[df['id'].duplicated(keep=False)].sort_values('id')
+        print("\n⚠️ ДУБЛИРУЮЩИЕСЯ ЗАПИСИ ПО id:")
+        display(dup_ids[['id', 'товар', 'дата', 'цена']])
+
+ 3.3. ВЫБРОСЫ (для цены)
+
+print("\n3.3. ПОИСК ВЫБРОСОВ (по цене)")
+print("-" * 40)
+
+column = 'цена'
+Q1 = df[column].quantile(0.25)
+Q3 = df[column].quantile(0.75)
+IQR = Q3 - Q1
+
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+outliers = df[(df[column] < lower_bound) | (df[column] > upper_bound)]
+print(f"Метод IQR для признака '{column}':")
+print(f"  Нижняя граница: {lower_bound:.2f}")
+print(f"  Верхняя граница: {upper_bound:.2f}")
+print(f"  Количество выбросов: {len(outliers)} ({len(outliers)/len(df)*100:.2f}%)")
+
+# Визуализация выбросов
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Boxplot
+sns.boxplot(data=df, y=column, ax=axes[0], color='lightblue')
+axes[0].set_title(f'Boxplot для {column}')
+axes[0].set_ylabel('Цена (руб.)')
+
+# Гистограмма с выделением границ
+sns.histplot(df[column], bins=50, kde=True, ax=axes[1], color='skyblue')
+axes[1].axvline(upper_bound, color='red', linestyle='--', label=f'Граница: {upper_bound:.0f}')
+axes[1].axvline(df[column].mean(), color='green', linestyle='--', label=f'Среднее: {df[column].mean():.0f}')
+axes[1].set_title(f'Распределение {column} с границей выбросов')
+axes[1].set_xlabel('Цена (руб.)')
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+
+if len(outliers) > 0:
+    print("\n ТОП-10 ВЫБРОСОВ (самые дорогие товары):")
+    display(outliers.nlargest(10, 'цена')[['id', 'товар', 'цена', 'город']])
+
+
+ 3.4. ПРОВЕРКА АНОМАЛЬНЫХ ЗНАЧЕНИЙ
+
+print("\n3.4. ПРОВЕРКА АНОМАЛЬНЫХ ЗНАЧЕНИЙ")
+print("-" * 40)
+
+# Проверка отрицательных цен
+negative_price = (df['цена'] < 0).sum()
+print(f"Отрицательная цена: {negative_price}")
+if negative_price > 0:
+    display(df[df['цена'] < 0][['id', 'товар', 'цена']])
+
+# Проверка возраста > 100
+if 'возраст' in df.columns:
+    old_age = (df['возраст'] > 100).sum()
+    print(f"Возраст > 100 лет: {old_age}")
+    if old_age > 0:
+        display(df[df['возраст'] > 100][['id', 'товар', 'возраст']])
+
+# Проверка количества <= 0
+invalid_qty = (df['количество'] <= 0).sum()
+print(f"Некорректное количество (≤0): {invalid_qty}")
+
+# Проверка скидки > 100
+if 'скидка_%' in df.columns:
+    invalid_discount = (df['скидка_%'] > 100).sum()
+    print(f"Скидка > 100%: {invalid_discount}")
+
+ 4. РАЗВЕДОЧНЫЙ АНАЛИЗ (EDA)
+
+print("\n" + "=" * 60)
+print("4. РАЗВЕДОЧНЫЙ АНАЛИЗ (EDA)")
+print("=" * 60)
+
+ 4.1. Распределение числового признака (цена)
+
+
+print("\n4.1. РАСПРЕДЕЛЕНИЕ ЦЕНЫ ТОВАРОВ")
+print("-" * 40)
+
+numeric_col = 'цена'
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Гистограмма с KDE
+sns.histplot(df[numeric_col], kde=True, ax=axes[0], color='skyblue')
+axes[0].axvline(df[numeric_col].mean(), color='red', linestyle='--', 
+                label=f'Среднее: {df[numeric_col].mean():.0f}')
+axes[0].axvline(df[numeric_col].median(), color='green', linestyle='--', 
+                label=f'Медиана: {df[numeric_col].median():.0f}')
+axes[0].set_title(f'Распределение {numeric_col}')
+axes[0].set_xlabel('Цена (руб.)')
+axes[0].legend()
+
+# Boxplot
+sns.boxplot(y=df[numeric_col], ax=axes[1], color='lightcoral')
+axes[1].set_title(f'Boxplot {numeric_col}')
+axes[1].set_ylabel('Цена (руб.)')
+
+plt.tight_layout()
+plt.show()
+
+print(" КОММЕНТАРИЙ:")
+print("  - Распределение цен имеет правостороннюю асимметрию")
+print("  - Среднее значение выше медианы, что указывает на наличие дорогих товаров")
+print("  - Большинство товаров стоят в диапазоне 0-50000 рублей")
+
+ 4.2. Анализ категориального признака (товар)
+
+print("\n4.2. АНАЛИЗ ПОПУЛЯРНОСТИ ТОВАРОВ")
+print("-" * 40)
+
+cat_col = 'товар'
+
+plt.figure(figsize=(10, 6))
+top_categories = df[cat_col].value_counts().head(10)
+sns.barplot(x=top_categories.values, y=top_categories.index, palette='viridis')
+plt.title(f'Топ-10 товаров по количеству продаж')
+plt.xlabel('Количество продаж')
+plt.tight_layout()
+plt.show()
+
+print(f"\n РАСПРЕДЕЛЕНИЕ ТОВАРОВ:")
+display(df['товар'].value_counts())
+
+print("\n КОММЕНТАРИЙ:")
+print("  - Самый популярный товар: Наушники (более 100 продаж)")
+print("  - Наименее популярный товар: Зарядка")
+print("  - Возможная гипотеза: Наушники - самый ходовой товар")
+
+
+ 4.3. Анализ продаж по городам
+
+print("\n4.3. АНАЛИЗ ПРОДАЖ ПО ГОРОДАМ")
+print("-" * 40)
+
+city_sales = df.groupby('город')['количество'].sum().sort_values(ascending=False)
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x=city_sales.values, y=city_sales.index, palette='plasma')
+plt.title('Продажи по городам (в штуках)')
+plt.xlabel('Количество проданных товаров')
+plt.tight_layout()
+plt.show()
+
+print(" КОММЕНТАРИЙ:")
+print("  - Больше всего продаж в Москве и Санкт-Петербурге")
+print("  - Меньше всего продаж в Новосибирске")
+print("  - Гипотеза: продажи зависят от размера города")
+
+ 4.4. Зависимость: Возраст vs Цена
+
+print("\n4.4. ВЗАИМОСВЯЗЬ ВОЗРАСТА И ЦЕНЫ")
+print("-" * 40)
+
+# Убираем пропуски
+age_data = df[df['возраст'].notna()]
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(data=age_data, x='возраст', y='цена', hue='товар', alpha=0.6)
+plt.title('Зависимость цены от возраста покупателя')
+plt.xlabel('Возраст покупателя')
+plt.ylabel('Цена товара (руб.)')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+print(" КОММЕНТАРИЙ:")
+print("  - Молодые покупатели (18-30 лет) чаще покупают дорогие товары")
+print("  - Покупатели 40-50 лет выбирают товары средней ценовой категории")
+print("  - Видна слабая положительная корреляция")
+
+4.5. Динамика продаж по месяцам
+
+print("\n4.5. ДИНАМИКА ПРОДАЖ ПО МЕСЯЦАМ")
+print("-" * 40)
+
+# Преобразуем дату
+df['дата'] = pd.to_datetime(df['дата'])
+df['месяц'] = df['дата'].dt.to_period('M')
+monthly_sales = df.groupby('месяц')['количество'].sum()
+
+plt.figure(figsize=(12, 5))
+monthly_sales.plot(kind='line', marker='o', color='green', linewidth=2, markersize=6)
+plt.title('Динамика продаж по месяцам')
+plt.xlabel('Месяц')
+plt.ylabel('Количество проданных товаров')
+plt.grid(True, alpha=0.3)
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+print(" КОММЕНТАРИЙ:")
+print("  - Пик продаж приходится на декабрь (предновогодний ажиотаж)")
+print("  - Спад продаж в январе-феврале")
+print("  - В целом наблюдается рост продаж в 2025 году")
+
+ 4.6. Способы оплаты
+
+print("\n4.6. АНАЛИЗ СПОСОБОВ ОПЛАТЫ")
+print("-" * 40)
+
+payment_counts = df['оплата'].value_counts()
+
+plt.figure(figsize=(8, 8))
+plt.pie(payment_counts.values, labels=payment_counts.index, autopct='%1.1f%%', startangle=90)
+plt.title('Распределение способов оплаты')
+plt.tight_layout()
+plt.show()
+
+print(" КОММЕНТАРИЙ:")
+print("  - Банковская карта - самый популярный способ оплаты (~40%)")
+print("  - Наличные и онлайн-оплата делят оставшуюся долю")
+print("  - Возможна гипотеза: в разных городах предпочтения отличаются")
+
+ 5. ВЫВОДЫ И ПЛАН УЛУЧШЕНИЯ
+
+print("\n" + "=" * 60)
+print("5. ВЫВОДЫ И ПЛАН УЛУЧШЕНИЯ КАЧЕСТВА ДАННЫХ")
+print("=" * 60)
+
+print("\n ОСНОВНЫЕ ПРОБЛЕМЫ КАЧЕСТВА ДАННЫХ:")
+print("-" * 40)
+
+problems = [
+    ["Пропуски в возрасте", f"{df['возраст'].isnull().sum()} шт.", "8%", "Заполнить средним по товару"],
+    ["Пропуски в скидке", f"{df['скидка_%'].isnull().sum()} шт.", "2%", "Заполнить 0"],
+    ["Отрицательная цена", f"{(df['цена'] < 0).sum()} шт.", "0.2%", "Удалить строку"],
+    ["Аномальный возраст (>100)", f"{(df['возраст'] > 100).sum() if 'возраст' in df.columns else 0} шт.", "0.2%", "Исправить/удалить"],
+    ["Дубликаты по id", f"{df['id'].duplicated().sum()} шт.", "0.4%", "Удалить дубликаты"],
+    ["Выбросы по цене", f"{len(outliers)} шт.", f"{len(outliers)/len(df)*100:.1f}%", "Проверить, возможно VIP"]
+]
+
+problems_df = pd.DataFrame(problems, columns=['Проблема', 'Количество', 'Доля', 'Решение'])
+display(problems_df)
+
+print("\n ПЛАН УЛУЧШЕНИЯ КАЧЕСТВА ДАННЫХ (по приоритетам):")
+print("-" * 40)
+
+print("\n ПРИОРИТЕТ 1 (СРОЧНО - исправить обязательно):")
+print("   1. Удалить строку с отрицательной ценой (id=201)")
+print("   2. Удалить дубликаты по id")
+print("   3. Исправить или удалить аномальный возраст 150 лет")
+
+print("\n ПРИОРИТЕТ 2 (ВАЖНО - исправить перед анализом):")
+print("   1. Заполнить пропуски в возрасте средним значением по категории товара")
+print("   2. Заполнить пропуски в скидке нулем")
+
+print("\n ПРИОРИТЕТ 3 (МОЖНО ОТЛОЖИТЬ - для улучшения):")
+print("   1. Проверить обоснованность выбросов (очень дорогие товары)")
+print("   2. Нормализовать названия городов (СПб vs Санкт-Петербург)")
+print("   3. Добавить новые признаки (день недели, сезон)")
+
+print("\n" + "=" * 60)
+print(" АНАЛИЗ ЗАВЕРШЕН!")
+print("=" * 60)
