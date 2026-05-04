@@ -1,16 +1,48 @@
-# Python
-__pycache__/
-*.pyc
-.env
-venv/
-.venv/
-
 # Jupyter Notebook
 .ipynb_checkpoints/
+*.ipynb_checkpoints*
+~*.ipynb
 
-# VS Code
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Виртуальное окружение
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# IDE и редакторы
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
-# Windows
+# Логи и временные файлы
+*.log
+*.tmp
+*.bak
+
+# Данные (опционально — если данные большие или секретные)
+# data/*.xlsx
+# data/*.csv
+
+# Отчёты в промежуточном формате
+*.aux
+*.md~
+
+# OS грязь (Windows, Mac)
 Thumbs.db
+ehthumbs.db
 Desktop.ini
